@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile.dev
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    depends_on:
+      - db
+    environment:
+      DB_CONNECTION: ${DB_CONNECTION}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+  
+  db:
+    image: mysql:8
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=video
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

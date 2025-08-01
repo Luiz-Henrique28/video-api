@@ -1,0 +1,124 @@
+gostaria de saber como algumas coisas sobre devops para comecar um projeto que eu preciso fazer para faculdade, onde tenho que montar uma plataforma de videos, onde cada pessoa pode publicar seu video, algo semelhante a uma rede social de focada em videos
+
+
+
+
+
+________________________________________________________________________________
+
+
+ Plano completo com etapas prévias ao desenvolvimento
+🔥 Fase 0 – Planejamento e preparação
+Definir o escopo e requisitos do sistema
+
+Objetivo: plataforma de vídeos tipo rede social
+
+Funcionalidades mínimas: upload, login, feed de vídeos, comentários
+
+Stack: Laravel (API) + Vue (SPA) + MySQL + S3
+
+Escolher a estrutura de repositório
+✅ Monorepo, com:
+
+
+/video-plataforma/
+├── /backend/    ← Laravel (API REST)
+├── /frontend/   ← Vue SPA com Vite
+Planejar ambientes (dev, test, prod)
+
+Definir 3 ambientes lógicos:
+
+dev: local, com Docker
+
+test: com dados falsos para testes e revisões
+
+prod: produção, com dados reais e regras de segurança
+
+Use .env + .env.example + variáveis de ambiente (Docker/CI/CD)
+
+Configurar Git e branchs
+
+Estrutura de versionamento: main, dev, feature/*, hotfix/*
+
+Criar .gitignore adequado para Laravel + Node
+
+Especificar estratégia de deploy (opcional para faculdade, mas bom hábito)
+
+Backend: Railway, Render, ou VPS com Laravel Forge
+
+Frontend: Vercel, Netlify, ou hospedado pelo Laravel
+
+
+________________________________________________________________________________
+
+ESTRUTURA DO PROJETO:
+
+Laravel API + Vue em subpasta separada dentro do mesmo repositório
+
+/video-plataforma (nome a ser alterado)/    ← Projeto principal (monorepo)
+├── /backend/                    			← Laravel (API REST, sem Blade)
+│   ├── routes/api.php
+│   ├── app/
+│   ├── config/
+│   └── ...
+├── /frontend/                   			← Vue 3 com Vite (SPA ou não)
+│   ├── src/
+│   ├── public/
+│   ├── vite.config.js
+│   └── ...
+└── /README.md
+
+________________________________________________________________________________
+
+
+Local de armazenamento dos vídeos:
+🔹 Escolha recomendada: Amazon S3
+Serviço de object storage escalável da AWS.
+
+Funciona com Laravel nativamente usando o Storage com o driver s3.
+
+Permite gerar links temporários/seguros para acesso ao vídeo.
+
+Pode ser integrado futuramente com CloudFront (CDN) para entrega rápida.
+
+🧪 Para testes e desenvolvimento local
+Use o sistema de arquivos local ou o serviço MinIO (simula S3).
+
+Armazenamento fica em storage/app/videos por exemplo.
+
+📁 Exemplo de organização:
+Vídeos são enviados via API: POST /api/videos
+
+Laravel armazena o vídeo em:
+
+Produção: s3://meu-bucket/videos/
+
+Local: storage/app/videos/
+
+No banco de dados, você salva o caminho do arquivo, não o arquivo em si:
+
+{
+  "title": "Meu vídeo",
+  "file_path": "videos/meu-video.mp4",
+  "user_id": 1
+}
+📦 Configuração .env para usar S3:
+FILESYSTEM_DISK=s3
+
+AWS_ACCESS_KEY_ID=suachave
+AWS_SECRET_ACCESS_KEY=suasecreta
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=nome-do-bucket
+
+✔️ Os vídeos serão armazenados em um bucket S3 na AWS em produção.
+Durante o desenvolvimento, pode-se usar armazenamento local ou MinIO como alternativa leve e local.
+
+
+________________________________________________________________________________
+
+
+
+AMBIENTE DE TESTE: 
+
+Docker + Docker Compose
+dados de exemplo com php artisan db:seed para testar
