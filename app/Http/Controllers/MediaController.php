@@ -24,6 +24,9 @@ class MediaController extends Controller
     public function store(StoreMediaRequest $request)
     {
 
+        // pesquisar sobre um usuario poder upar uma media no post de outra pessoa apenas trocando o id do post que vai ser enviado, 
+        // como tratar isso, no front ou no back
+        
         $validated = $request->validated();
 
         $post = Post::findOrFail($validated['post_id']);

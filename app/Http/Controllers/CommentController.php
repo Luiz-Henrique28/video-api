@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
+use App\Models\Post;
 use Illuminate\Http\Request;
 
 class CommentController extends Controller
@@ -12,15 +14,25 @@ class CommentController extends Controller
      */
     public function index()
     {
-        //
+        return response("ok");
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreCommentRequest $request)
     {
-        //
+        
+        $validated = $request->validated();
+
+        $post = Post::findOrFail($validated['post_id']);
+
+        $comment = $post->comment()->create($validated);
+
+        return response()->json([
+            'success' => 'true',
+            'result' => $comment
+        ]);
     }
 
     /**

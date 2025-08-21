@@ -37,7 +37,7 @@ class PostController extends Controller
     public function show(Post $post)
     {
         
-        return $post->load('media');
+        return $post->load(['media', 'comment']);
     }
 
     /**
