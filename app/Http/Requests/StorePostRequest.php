@@ -25,6 +25,8 @@ class StorePostRequest extends FormRequest
             'user_id' => 'required|integer',
             'caption' => 'nullable|string|max:200',
             'visibility' => 'required|in:public,private',
+            'tags' => 'nullable|array',
+            'tags.*' => ['required', 'string']
         ];
     }
 }

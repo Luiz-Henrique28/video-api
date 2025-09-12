@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use App\Http\Requests\StorePostRequest;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -25,7 +26,18 @@ class PostController extends Controller
         
         $validated = $request->validated();
 
+        Log::debug("debug", $validated);
+
         $newPost = Post::create($validated);
+
+        $tags = $request->input('tags', []);
+
+        $tagIds = collect($tags)->map(function ($tagName) {
+            
+            return Tag::firstOrCreate(['name' => $tagName])->id;
+        });
+
+        $newPost->tag()->attach($tagIds);
 
         return $newPost;
 
@@ -37,7 +49,7 @@ class PostController extends Controller
     public function show(Post $post)
     {
         
-        return $post->load(['media', 'comment']);
+        return $post->load(['media', 'comment', 'tag']);
     }
 
     /**
