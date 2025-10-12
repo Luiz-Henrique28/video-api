@@ -15,7 +15,27 @@ class PostController extends Controller
      */
     public function index()
     {
-        Log::debug("index");
+        
+        // retorna exatamente os dados usados em cada card do home (swipes)
+        return Post::select([
+            'id',
+            'user_id',
+            'caption',
+        ])->with([
+            'firstMedia' => function($query) {
+                $query->select('post_id', 'file_path');
+            },
+            'user' => function ($query) {
+                $query->select('id', 'name', 'avatar');
+            }
+        ])->withCount([
+            'media as image_count' => function ($query) {
+                $query->where('media_type', 'image');
+            },
+            'media as video_count' => function ($query) {
+                $query->where('media_type', 'video');
+            }
+        ])->paginate(16);
     }
 
     /**
@@ -33,14 +53,13 @@ class PostController extends Controller
         $tags = $request->input('tags', []);
 
         $tagIds = collect($tags)->map(function ($tagName) {
-            
+
             return Tag::firstOrCreate(['name' => $tagName])->id;
         });
 
         $newPost->tag()->attach($tagIds);
 
         return $newPost;
-
     }
 
     /**
@@ -48,7 +67,7 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        
+
         return $post->load(['media', 'comment', 'tag']);
     }
 

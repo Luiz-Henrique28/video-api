@@ -27,6 +27,14 @@ class Media extends Model
        'updated_at'
     ];
 
+    //protected $appends = ['file_url'];
+
+    public function getFileUrlAttribute() 
+    {
+        
+        return \Storage::disk('public')->url($this->file_path);
+    }
+
     public function post(): BelongsTo
     {
         return $this->belongsTo(Post::class);

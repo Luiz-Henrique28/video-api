@@ -34,6 +34,12 @@ class Post extends Model
         return $this->hasMany(Media::class);
     }
 
+    // pega apenas uma das imagens que servira de thumbnail
+    public function firstMedia()
+    {
+        return $this->hasOne(Media::class)->oldest('id');
+    }
+
     public function comment(): HasMany
     {
         return $this->hasMany(Comment::class);

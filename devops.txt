@@ -122,3 +122,7 @@ AMBIENTE DE TESTE:
 
 Docker + Docker Compose
 dados de exemplo com php artisan db:seed para testar
+
+
+url que da pra acessar as midias:
+http://localhost:8000/storage/uploads/users/85/6892aee72a375wallhaven-0pd5z9_1920x1080.png

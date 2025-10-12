@@ -26,8 +26,12 @@ class MediaController extends Controller
 
         // pesquisar sobre um usuario poder upar uma media no post de outra pessoa apenas trocando o id do post que vai ser enviado, 
         // como tratar isso, no front ou no back
+        Log::debug("start no upload das midias");
         
+        $disk = config('filesystems.default');
         $validated = $request->validated();
+
+        Log::debug("dados validados");
 
         $post = Post::findOrFail($validated['post_id']);
 
@@ -38,8 +42,10 @@ class MediaController extends Controller
 
             $filePath = $file->storeAs("uploads/users/{$request->user_id}", $newFileName);
 
+            $fileUrl = \Storage::disk($disk)->url($filePath);
+
             $fileModel[] = [
-                'file_path' => $filePath,
+                'file_path' => $fileUrl,
                 'media_type' => $file->getMimeType() === 'video/mp4' ? 'video' : 'image',
                 'order' => $index,
             ];
