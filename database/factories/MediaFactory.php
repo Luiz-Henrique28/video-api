@@ -18,7 +18,7 @@ class MediaFactory extends Factory
         return [
             'post_id' => Post::factory(),
             'file_path' => $this->faker->imageUrl(), // ou um caminho fake de vídeo/áudio se preferir
-            'media_type' => $this->faker->randomElement(['image', 'video', 'audio']),
+            'media_type' => $this->faker->randomElement(['image', 'video']),
             'order' => $this->faker->numberBetween(1, 5),
             'created_at' => now(),
             'updated_at' => now(),

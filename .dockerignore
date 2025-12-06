@@ -1,0 +1,23 @@
+# Dependências e Builds
+/vendor
+/node_modules
+.git
+
+# Pastas de cache e logs (Laravel)
+/storage/*.key
+/storage/app
+/storage/framework
+/storage/logs
+
+# Arquivos de ambiente
+.env
+
+# Arquivos de IDE (VS Code) e de build
+.vscode
+.idea
+*.log
+.DS_Store
+Thumbs.db
+
+# Adicione arquivos executáveis ou binários que podem ter permissões estranhas
+# Se você tiver um arquivo executável na raiz que não é o código principal, adicione-o aqui.

@@ -21,6 +21,7 @@ class PostController extends Controller
             'id',
             'user_id',
             'caption',
+            'thumbnail_path',
         ])->with([
             'firstMedia' => function($query) {
                 $query->select('post_id', 'file_path');

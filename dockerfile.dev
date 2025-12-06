@@ -1,11 +1,42 @@
-FROM php:8.2-fpm
+FROM php:8.2-cli
 
+# Instalação de Dependências e Extensões
 RUN apt-get update && apt-get install -y \
     zip unzip curl libpng-dev libonig-dev libxml2-dev libzip-dev git \
-    && docker-php-ext-install pdo_mysql mbstring zip
+    ffmpeg \
+    && docker-php-ext-install pdo_mysql mbstring zip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Configuração PHP para uploads e tempo limite
+RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini && \
+    echo "post_max_size = 64M" >> /usr/local/etc/php/conf.d/uploads.ini && \
+    echo "max_execution_time = 300" >> /usr/local/etc/php/conf.d/uploads.ini
+
+# Copia o Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# 1. Instalação das dependências (Camada de cache)
+COPY composer.json composer.lock ./
+RUN composer install --prefer-dist --no-scripts
+
+# 2. Copia o código completo
+COPY . .
+
+# 3. Otimizações e scripts finais do Laravel
+RUN composer dump-autoload --optimize
+#RUN php artisan config:cache
+#RUN php artisan route:cache 
+#RUN php artisan view:cache
+
+# 4. Ajuste de Permissões e Usuário
+RUN chown -R www-data:www-data /app \
+    && chmod -R 775 /app/storage \
+    && chmod -R 775 /app/bootstrap/cache
+
+# Define o usuário padrão para execução (Segurança)
+USER www-data 
+
+# Comando de Início (rodará o PHP-FPM)
+#CMD ["php-fpm"]

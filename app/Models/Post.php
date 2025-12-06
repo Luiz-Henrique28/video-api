@@ -24,6 +24,7 @@ class Post extends Model
     protected $fillable = [
         'user_id',
         'caption',
+        'thumbnail_path',
         'visibility',
         'created_at',
         'updated_at'

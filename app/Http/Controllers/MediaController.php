@@ -7,6 +7,9 @@ use App\Models\Media;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use App\Jobs\GenerateThumbFromVideo;
+
 
 class MediaController extends Controller
 {
@@ -23,26 +26,49 @@ class MediaController extends Controller
      */
     public function store(StoreMediaRequest $request)
     {
-
-        // pesquisar sobre um usuario poder upar uma media no post de outra pessoa apenas trocando o id do post que vai ser enviado, 
-        // como tratar isso, no front ou no back
-        Log::debug("start no upload das midias");
-        
         $disk = config('filesystems.default');
         $validated = $request->validated();
-
-        Log::debug("dados validados");
-
         $post = Post::findOrFail($validated['post_id']);
 
+        $fileModel = [];
+        $thumbnailPath = null;
+        $firstVideoPath = null;
+
         foreach ($request->file('files') as $index => $file) {
+            // Sanitizar nome do arquivo: remover espaços e caracteres especiais
+            $sanitizedFileName = preg_replace('/[^A-Za-z0-9._-]/', '_', $file->getClientOriginalName());
+            $newFileName = uniqid() . "_" . $sanitizedFileName;
+            $isImage = str_starts_with($file->getMimeType(), 'image/');
 
-            $fileName = $file->getClientOriginalName();
-            $newFileName = uniqid() . "" . $fileName;
+            $directory = "uploads/users/{$request->user_id}/posts/{$post->id}";
 
-            $filePath = $file->storeAs("uploads/users/{$request->user_id}", $newFileName);
+            // Garantir que o diretório existe
+            Storage::disk($disk)->makeDirectory($directory);
 
-            $fileUrl = \Storage::disk($disk)->url($filePath);
+            // Salvar arquivo com nome customizado
+            $storagePath = $file->storeAs($directory, $newFileName, $disk);
+
+            if ($storagePath === false) {
+                throw new \Exception("Falha ao salvar arquivo: {$newFileName}");
+            }
+
+            $fileUrl = Storage::disk($disk)->url($storagePath);
+
+            // Se for imagem e ainda não tem thumbnail, usa a primeira imagem
+            if ($isImage && !$thumbnailPath) {
+                $thumbnailName = "thumb_" . $newFileName;
+                $thumbnailPath = $file->storeAs(
+                    "uploads/users/{$request->user_id}/posts/{$post->id}/thumbnail",
+                    $thumbnailName,
+                    $disk
+                );
+
+                $post->update(['thumbnail_path' => Storage::disk($disk)->url($thumbnailPath)]);
+            }
+            // Se for vídeo e ainda não tem vídeo salvo, guarda para gerar thumbnail depois
+            elseif ($firstVideoPath === null && !$isImage) {
+                $firstVideoPath = $storagePath;
+            }
 
             $fileModel[] = [
                 'file_path' => $fileUrl,
@@ -51,10 +77,15 @@ class MediaController extends Controller
             ];
         }
 
+        // Se não tem thumbnail e tem vídeo, dispara job para gerar thumbnail do vídeo
+        if (!$thumbnailPath && $firstVideoPath) {
+            GenerateThumbFromVideo::dispatch($post->user_id, $post->id, $firstVideoPath);
+        }
+
         $post->media()->createMany($fileModel);
 
         return response()->json([
-            'success' => 'true',
+            'success' => true,
             'result' => $post->load('media')
         ], 200);
     }
