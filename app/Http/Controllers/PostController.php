@@ -68,8 +68,15 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-
-        return $post->load(['media', 'comment', 'tag']);
+        return $post->load(['media', 'comment.user:id,name', 'tag', 'user'])
+            ->loadCount([
+                'media as image_count' => function ($query) {
+                    $query->where('media_type', 'image');
+                },
+                'media as video_count' => function ($query) {
+                    $query->where('media_type', 'video');
+                }
+            ]);
     }
 
     /**

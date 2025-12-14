@@ -29,6 +29,8 @@ class CommentController extends Controller
 
         $comment = $post->comment()->create($validated);
 
+        $comment->load('user:id,name');
+
         return response()->json([
             'success' => 'true',
             'result' => $comment
