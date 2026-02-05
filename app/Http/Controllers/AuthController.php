@@ -29,7 +29,7 @@ class AuthController extends Controller
         }
 
         $email = $verifiedIdToken->claims()->get('email');
-        $name = $verifiedIdToken->claims()->get('name');
+        //$name = $verifiedIdToken->claims()->get('name');
         $picture = $verifiedIdToken->claims()->get('picture');
 
         $firebaseData = $verifiedIdToken->claims()->get('firebase');
@@ -39,7 +39,7 @@ class AuthController extends Controller
 
         $user = User::firstOrCreate(
             ['email' => $email],
-            ['name' => $name, 'avatar' => $picture, 'provider' => $provider, 'provider_id' => $providerId]
+            ['avatar' => $picture, 'provider' => $provider, 'provider_id' => $providerId]
         );
 
         if (!$user->wasRecentlyCreated) {
