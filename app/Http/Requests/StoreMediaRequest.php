@@ -23,7 +23,6 @@ class StoreMediaRequest extends FormRequest
     {
         return [
             'post_id' => 'required|integer',
-            'user_id' => 'required|integer',
             'files' => 'required|array',
             'files.*' => ['required', 'file', 'mimes:jpg,jpeg,png,mp4', 'max:51200'],
         ];

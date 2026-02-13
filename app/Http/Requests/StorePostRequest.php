@@ -22,7 +22,6 @@ class StorePostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|integer',
             'caption' => 'nullable|string|max:200',
             'visibility' => 'required|in:public,private',
             'tags' => 'nullable|array',

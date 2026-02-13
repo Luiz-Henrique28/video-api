@@ -14,7 +14,7 @@ class CommentController extends Controller
      */
     public function index()
     {
-        return response("ok");
+        
     }
 
     /**
@@ -24,6 +24,7 @@ class CommentController extends Controller
     {
         
         $validated = $request->validated();
+        $validated['user_id'] = $request->user()->id;
 
         $post = Post::findOrFail($validated['post_id']);
 
@@ -32,7 +33,7 @@ class CommentController extends Controller
         $comment->load('user:id,name');
 
         return response()->json([
-            'success' => 'true',
+            'success' => true,
             'result' => $comment
         ]);
     }
@@ -56,8 +57,14 @@ class CommentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Comment $comment)
+    public function destroy(Request $request, Comment $comment)
     {
-        //
+        if ($comment->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $deleted = $comment->delete();
+
+        return response()->json(['result' => $deleted]);
     }
 }

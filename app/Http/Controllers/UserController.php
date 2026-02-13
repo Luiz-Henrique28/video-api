@@ -13,7 +13,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        return user::all();
+        return User::all();
     }
 
     /**
@@ -42,7 +42,7 @@ class UserController extends Controller
 
         $user->update($validated);
 
-        return response()->json([$user]);
+        return response()->json($user);
     }
 
     /**
@@ -50,8 +50,8 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        $deteled = $user->delete();
-        return response()->json([ 'result' => $deteled ]);
+        $deleted = $user->delete();
+        return response()->json(['result' => $deleted]);
     }
 
     public function updateUsername(UpdateUserRequest $request)

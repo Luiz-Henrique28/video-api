@@ -6,7 +6,6 @@ use App\Models\Post;
 use App\Http\Requests\StorePostRequest;
 use App\Models\Tag;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class PostController extends Controller
 {
@@ -46,8 +45,7 @@ class PostController extends Controller
     {
         
         $validated = $request->validated();
-
-        Log::debug("debug", $validated);
+        $validated['user_id'] = $request->user()->id;
 
         $newPost = Post::create($validated);
 
@@ -90,8 +88,14 @@ class PostController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Post $post)
+    public function destroy(Request $request, Post $post)
     {
-        //
+        if ($post->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $deleted = $post->delete();
+
+        return response()->json(['result' => $deleted]);
     }
 }

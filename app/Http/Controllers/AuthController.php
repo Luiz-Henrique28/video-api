@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\FirebaseAuthRequest;
+use App\Http\Resources\UserMinifiedResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Kreait\Firebase\Exception\Auth\FailedToVerifyToken;
@@ -60,7 +61,7 @@ class AuthController extends Controller
     }
 
     public function me(Request $request) {
-        return response()->json($request->user());
+        return new UserMinifiedResource($request->user());
     }
 
 
