@@ -26,6 +26,8 @@ class AuthController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'message' => 'Erro ao processar autenticação externa.',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ], 500);
         }
 
