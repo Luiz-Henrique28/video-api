@@ -64,17 +64,23 @@ class PostController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Post $post)
+    public function show(Request $request, Post $post)
     {
-        return $post->load(['media', 'comment.user:id,name', 'tag', 'user'])
+        $post->load(['media', 'comment.user:id,name', 'tag', 'user'])
             ->loadCount([
                 'media as image_count' => function ($query) {
                     $query->where('media_type', 'image');
                 },
                 'media as video_count' => function ($query) {
                     $query->where('media_type', 'video');
-                }
+                },
+                'likes as likes_count',
             ]);
+
+        $user = $request->user('sanctum') ?? $request->user();
+        $post->setAttribute('is_liked', $post->isLikedBy($user));
+        
+        return $post;
     }
 
     /**

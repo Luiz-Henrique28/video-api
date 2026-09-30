@@ -6,6 +6,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LikeController;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::patch('/user/username', [UserController::class, 'updateUsername']);
 
     Route::delete('/user/{user}', [UserController::class, 'destroy']);
+
+    Route::post('/post/{post}/like', [LikeController::class, 'store']);
+    Route::delete('/post/{post}/like', [LikeController::class, 'destroy']);
 });
 
 
