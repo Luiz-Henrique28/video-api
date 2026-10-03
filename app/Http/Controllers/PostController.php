@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\IncrementPostViews;
 use App\Models\Post;
 use App\Http\Requests\StorePostRequest;
 use App\Models\Tag;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 class PostController extends Controller
 {
     /**
@@ -14,13 +16,13 @@ class PostController extends Controller
      */
     public function index()
     {
-        
         // retorna exatamente os dados usados em cada card do home (swipes)
         return Post::select([
             'id',
             'user_id',
             'caption',
             'thumbnail_path',
+            'views_count',
         ])->with([
             'firstMedia' => function($query) {
                 $query->select('post_id', 'file_path');
@@ -43,7 +45,6 @@ class PostController extends Controller
      */
     public function store(StorePostRequest $request)
     {
-        
         $validated = $request->validated();
         $validated['user_id'] = $request->user()->id;
 
@@ -52,7 +53,6 @@ class PostController extends Controller
         $tags = $request->input('tags', []);
 
         $tagIds = collect($tags)->map(function ($tagName) {
-
             return Tag::firstOrCreate(['name' => $tagName])->id;
         });
 
@@ -62,7 +62,13 @@ class PostController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Exibe os detalhes de um post especifico.
+     *
+     * Fluxo de visualizacao (hibrido):
+     *  1. Check rapido no Controller (filtro): evita criar Jobs desnecessarios
+     *     para visitantes que ja viram o post nas ultimas 4h.
+     *  2. Check definitivo dentro do Job (guarda): resolve race conditions raras
+     *     de requests simultaneos do mesmo visitante.
      */
     public function show(Request $request, Post $post)
     {
@@ -77,9 +83,24 @@ class PostController extends Controller
                 'likes as likes_count',
             ]);
 
-        $user = $request->user('sanctum') ?? $request->user();
-        $post->setAttribute('is_liked', $post->isLikedBy($user));
-        
+        $authUser = $request->user('sanctum') ?? $request->user();
+        $post->setAttribute('is_liked', $post->isLikedBy($authUser));
+
+        // Identificador do visitante: user ID (logado) ou IP (anonimo)
+        $identifier = $authUser?->id
+            ? "user:{$authUser->id}"
+            : "ip:{$request->ip()}";
+
+        Log::debug(['teste: ',Cache::has("post_view_seen:{$post->id}:{$identifier}")]);
+        // Check rapido: so dispara o Job se ainda nao contabilizou nas ultimas 4h
+        if (!Cache::has("post_view_seen:{$post->id}:{$identifier}")) {
+            IncrementPostViews::dispatch(
+                postId:        $post->id,
+                visitorIp:     $request->ip(),
+                visitorUserId: $authUser?->id,
+            );
+        }
+
         return $post;
     }
 

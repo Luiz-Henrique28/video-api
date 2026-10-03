@@ -22,6 +22,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $password
  * @property int $followers_count
  * @property int $following_count
+ * @property int $profile_views_count
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  */

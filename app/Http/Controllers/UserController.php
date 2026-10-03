@@ -34,9 +34,10 @@ class UserController extends Controller
                 'id'              => $freshUser->id,
                 'name'            => $freshUser->name,
                 'avatar'          => $freshUser->avatar,
-                'followers_count' => (int) $freshUser->followers_count,
-                'following_count' => (int) $freshUser->following_count,
-                'posts_count'     => $freshUser->post()->count(),
+                'followers_count'     => (int) $freshUser->followers_count,
+                'following_count'     => (int) $freshUser->following_count,
+                'profile_views_count' => (int) $freshUser->profile_views_count,
+                'posts_count'         => $freshUser->post()->count(),
             ];
         });
 
@@ -53,7 +54,7 @@ class UserController extends Controller
     public function posts(User $user)
     {
         return Post::where('user_id', $user->id)
-            ->select(['id', 'user_id', 'caption', 'thumbnail_path', 'created_at'])
+            ->select(['id', 'user_id', 'caption', 'thumbnail_path', 'created_at', 'views_count'])
             ->with([
                 'firstMedia' => function ($query) {
                     $query->select('post_id', 'file_path');
