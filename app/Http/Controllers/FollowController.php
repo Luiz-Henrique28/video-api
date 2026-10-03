@@ -40,12 +40,12 @@ class FollowController extends Controller
             'created_at'   => now(),
         ]);
 
-        // Atualiza contadores em background
-        UpdateFollowCounters::dispatch($follower->id, $user->id, 'follow');
+        // Atualiza contadores de forma síncrona e limpa o cache
+        UpdateFollowCounters::dispatchSync($follower->id, $user->id, 'follow');
 
         return response()->json([
             'following'       => true,
-            'followers_count' => $user->followers_count + 1,
+            'followers_count' => $user->fresh()->followers_count,
         ]);
     }
 
@@ -67,13 +67,12 @@ class FollowController extends Controller
             ], 404);
         }
 
-        UpdateFollowCounters::dispatch($follower->id, $user->id, 'unfollow');
-
-        $newCount = max(0, $user->followers_count - 1);
+        // Atualiza contadores de forma síncrona e limpa o cache
+        UpdateFollowCounters::dispatchSync($follower->id, $user->id, 'unfollow');
 
         return response()->json([
             'following'       => false,
-            'followers_count' => $newCount,
+            'followers_count' => $user->fresh()->followers_count,
         ]);
     }
 }
