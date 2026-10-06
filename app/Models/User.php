@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * App\Models\User
@@ -22,7 +23,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $password
  * @property int $followers_count
  * @property int $following_count
- * @property int $profile_views_count
+ * @property int $total_views
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  */
@@ -48,6 +49,20 @@ class User extends Authenticatable
         'created_at',
         'updated_at'
     ];
+    protected static function booted()
+    {
+        static::deleting(function (User $user) {
+            $user->post->each(function ($post) {
+                $post->delete();
+            });
+            
+            $user->comment()->delete();
+
+            $user->tokens()->delete();
+            Cache::forget('user_profile:' . $user->id);
+        });
+    }
+
 
     /**
      * The attributes that should be hidden for serialization.

@@ -36,7 +36,7 @@ class UserController extends Controller
                 'avatar'          => $freshUser->avatar,
                 'followers_count'     => (int) $freshUser->followers_count,
                 'following_count'     => (int) $freshUser->following_count,
-                'profile_views_count' => (int) $freshUser->profile_views_count,
+                'total_views'         => (int) $freshUser->total_views,
                 'posts_count'         => $freshUser->post()->count(),
             ];
         });
@@ -79,10 +79,12 @@ class UserController extends Controller
         return response()->json($user);
     }
 
-    public function destroy(User $user)
+    public function destroy(Request $request)
     {
-        $deleted = $user->delete();
-        return response()->json(['result' => $deleted]);
+        $user = $request->user();
+        $user->forceDelete();
+
+        return response()->json(['message' => 'Conta deletada com sucesso']);
     }
 
     public function updateUsername(UpdateUserRequest $request)

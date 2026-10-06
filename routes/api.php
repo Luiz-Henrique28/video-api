@@ -41,7 +41,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::patch('/user/username', [UserController::class, 'updateUsername']);
 
-    Route::delete('/user/{user}', [UserController::class, 'destroy']);
+    Route::delete('/user', [UserController::class, 'destroy']);
 
     Route::post('/post/{post}/like', [LikeController::class, 'store']);
     Route::delete('/post/{post}/like', [LikeController::class, 'destroy']);

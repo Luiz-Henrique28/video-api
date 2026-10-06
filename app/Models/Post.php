@@ -11,9 +11,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Post extends Model
 {
-    
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
+
+    protected static function booted()
+    {
+        static::deleting(function (Post $post) {
+            $post->media->each(function ($media) {
+                $media->delete();
+            });
+            $post->comment()->delete();
+        });
+    }
 
     protected $table = 'post';
 

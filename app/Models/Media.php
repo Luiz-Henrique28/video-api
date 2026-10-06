@@ -5,11 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class Media extends Model
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
+
+    protected static function booted()
+    {
+        static::deleting(function (Media $media) {
+            if ($media->file_path) {
+                Storage::disk('public')->delete($media->file_path);
+            }
+        });
+    }
 
     protected $table = 'media';
 
