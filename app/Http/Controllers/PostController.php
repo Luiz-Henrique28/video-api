@@ -14,10 +14,12 @@ class PostController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $authUser = $request->user('sanctum');
+
         // retorna exatamente os dados usados em cada card do home (swipes)
-        return Post::select([
+        return Post::visibleTo($authUser)->select([
             'id',
             'user_id',
             'caption',
@@ -72,6 +74,13 @@ class PostController extends Controller
      */
     public function show(Request $request, Post $post)
     {
+        $authUser = $request->user('sanctum') ?? $request->user();
+
+        // Post privado so e visivel ao dono. 404 para nao revelar que o post existe.
+        if ($post->visibility === 'private' && $post->user_id !== $authUser?->id) {
+            abort(404);
+        }
+
         $post->load(['media', 'comment.user:id,name', 'tag', 'user'])
             ->loadCount([
                 'media as image_count' => function ($query) {
@@ -83,16 +92,12 @@ class PostController extends Controller
                 'likes as likes_count',
             ]);
 
-        $authUser = $request->user('sanctum') ?? $request->user();
         $post->setAttribute('is_liked', $post->isLikedBy($authUser));
-
-        // Identificador do visitante: user ID (logado) ou IP (anonimo)
+        
         $identifier = $authUser?->id
             ? "user:{$authUser->id}"
             : "ip:{$request->ip()}";
 
-        Log::debug(['teste: ',Cache::has("post_view_seen:{$post->id}:{$identifier}")]);
-        // Check rapido: so dispara o Job se ainda nao contabilizou nas ultimas 4h
         if (!Cache::has("post_view_seen:{$post->id}:{$identifier}")) {
             IncrementPostViews::dispatch(
                 postId:        $post->id,

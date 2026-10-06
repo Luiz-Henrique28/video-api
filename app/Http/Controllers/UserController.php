@@ -51,9 +51,10 @@ class UserController extends Controller
      * Lista os posts de um usuario especifico.
      * GET /user/{user}/posts
      */
-    public function posts(User $user)
+    public function posts(Request $request, User $user)
     {
-        return Post::where('user_id', $user->id)
+        return Post::visibleTo($request->user('sanctum'))
+            ->where('user_id', $user->id)
             ->select(['id', 'user_id', 'caption', 'thumbnail_path', 'created_at', 'views_count'])
             ->with([
                 'firstMedia' => function ($query) {

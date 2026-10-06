@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Like;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -69,6 +70,22 @@ class Post extends Model
     public function likes(): HasMany
     {
         return $this->hasMany(Like::class);
+    }
+
+    /**
+     * Restringe a consulta aos posts que o usuario pode ver:
+     * posts publicos + posts do proprio usuario (inclusive privados).
+     * Visitantes anonimos veem apenas posts publicos.
+     */
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        return $query->where(function (Builder $q) use ($user) {
+            $q->where('visibility', 'public');
+
+            if ($user) {
+                $q->orWhere('user_id', $user->id);
+            }
+        });
     }
 
     public function isLikedBy(?User $user): bool
