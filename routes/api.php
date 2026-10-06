@@ -53,7 +53,7 @@ Route::middleware(['auth:sanctum', EnsureProfileIsComplete::class])->group(funct
 
     Route::apiResource('post', PostController::class)->only(['store', 'destroy']);
 
-    Route::apiResource('media', MediaController::class)->only(['store', 'destroy']);
+    Route::apiResource('media', MediaController::class)->only(['destroy']);
 
     Route::apiResource('comment', CommentController::class)->only(['store', 'destroy']);
 

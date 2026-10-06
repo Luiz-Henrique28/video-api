@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\IncrementPostViews;
 use App\Models\Post;
 use App\Http\Requests\StorePostRequest;
-use App\Models\Tag;
+use App\Services\PostService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -45,22 +45,18 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StorePostRequest $request)
+    public function store(StorePostRequest $request, PostService $posts)
     {
-        $validated = $request->validated();
-        $validated['user_id'] = $request->user()->id;
+        $data = $request->validated();
 
-        $newPost = Post::create($validated);
+        $post = $posts->create(
+            $request->user(),
+            ['caption' => $data['caption'] ?? null, 'visibility' => $data['visibility']],
+            $data['tags'] ?? [],
+            $request->file('files'),
+        );
 
-        $tags = $request->input('tags', []);
-
-        $tagIds = collect($tags)->map(function ($tagName) {
-            return Tag::firstOrCreate(['name' => $tagName])->id;
-        });
-
-        $newPost->tag()->attach($tagIds);
-
-        return $newPost;
+        return response()->json($post, 201);
     }
 
     /**
