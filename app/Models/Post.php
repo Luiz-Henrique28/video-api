@@ -25,6 +25,10 @@ class Post extends Model
             });
             $post->comment()->delete();
         });
+
+        static::deleted(function (Post $post) {
+            Storage::disk(config('filesystems.default'))->deleteDirectory($post->mediaDirectory());
+        });
     }
 
     protected $table = 'post';
@@ -51,6 +55,14 @@ class Post extends Model
         return Attribute::get(
             fn (?string $value) => $value ? Storage::disk(config('filesystems.default'))->url($value) : null
         );
+    }
+
+    /**
+     * Storage directory holding every file (media and thumbnail) of this post.
+     */
+    public function mediaDirectory(): string
+    {
+        return "uploads/users/{$this->user_id}/posts/{$this->id}";
     }
 
     public function media(): HasMany
