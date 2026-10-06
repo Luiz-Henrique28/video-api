@@ -54,8 +54,11 @@ class AuthController extends Controller
             ]);
         }
 
-        $user->tokens()->delete();
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Revoga apenas o token do mesmo dispositivo, preservando as outras sessoes.
+        $deviceName = $request->validated()['device_name'] ?? 'auth_token';
+
+        $user->tokens()->where('name', $deviceName)->delete();
+        $token = $user->createToken($deviceName)->plainTextToken;
 
         return response()->json([
             'token' => $token,

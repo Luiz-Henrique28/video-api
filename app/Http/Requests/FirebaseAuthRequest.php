@@ -26,7 +26,8 @@ class FirebaseAuthRequest extends FormRequest
                 'required',
                 'string',
                 'regex:/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/'
-            ]
+            ],
+            'device_name' => ['required', 'string', 'max:100'],
         ];
     }
 }
