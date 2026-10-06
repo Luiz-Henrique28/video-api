@@ -10,16 +10,6 @@ use Illuminate\Support\Facades\Cache;
 
 class UserController extends Controller
 {
-    public function index()
-    {
-        return User::all();
-    }
-
-    public function store(Request $request)
-    {
-        //
-    }
-
     /**
      * Exibe o perfil publico de um usuario com cache.
      * Salva as metricas brutas do perfil no Cache (TTL 1 hora / 3600s).

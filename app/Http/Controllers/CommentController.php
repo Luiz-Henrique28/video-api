@@ -10,14 +10,6 @@ use Illuminate\Http\Request;
 class CommentController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(StoreCommentRequest $request)
@@ -36,22 +28,6 @@ class CommentController extends Controller
             'success' => true,
             'result' => $comment
         ]);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Comment $comment)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Comment $comment)
-    {
-        //
     }
 
     /**

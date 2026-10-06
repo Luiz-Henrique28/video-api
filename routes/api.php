@@ -51,11 +51,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 Route::middleware(['auth:sanctum', EnsureProfileIsComplete::class])->group(function () {
 
-    Route::apiResource('post', PostController::class)->except(['index', 'show']);
+    Route::apiResource('post', PostController::class)->only(['store', 'destroy']);
 
     Route::apiResource('media', MediaController::class)->only(['store', 'destroy']);
 
-    Route::apiResource('comment', CommentController::class)->only(['store', 'update', 'destroy']);
+    Route::apiResource('comment', CommentController::class)->only(['store', 'destroy']);
 
     Route::middleware('throttle:follow')->group(function () {
         Route::post('/user/{user}/follow',   [FollowController::class, 'store']);
