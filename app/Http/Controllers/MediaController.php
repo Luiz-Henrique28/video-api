@@ -12,11 +12,9 @@ class MediaController extends Controller
      */
     public function destroy(Request $request, Media $media)
     {
-        $media->load('post:id,user_id');
+        $media->loadMissing('post:id,user_id');
 
-        if (!$media->post || $media->post->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorize('delete', $media);
 
         $deleted = $media->delete();
 

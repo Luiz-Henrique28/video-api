@@ -35,9 +35,7 @@ class CommentController extends Controller
      */
     public function destroy(Request $request, Comment $comment)
     {
-        if ($comment->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorize('delete', $comment);
 
         $deleted = $comment->delete();
 
