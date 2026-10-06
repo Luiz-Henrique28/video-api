@@ -2,11 +2,17 @@
 
 namespace App\Jobs;
 
-use App\Models\Post;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Gera o arquivo de thumbnail a partir de um vídeo.
+ *
+ * Responsabilidade única: extrair o frame e gravá-lo em $thumbnailRelativePath.
+ * O caminho da thumbnail e a atualização do Post são definidos por quem despacha o job
+ * (MediaController@store), para que o frontend receba a URL já na resposta.
+ */
 class GenerateThumbFromVideo implements ShouldQueue
 {
     use Queueable;
@@ -15,9 +21,9 @@ class GenerateThumbFromVideo implements ShouldQueue
      * Create a new job instance.
      */
     public function __construct(
-        public int $userId,
-        public int $postId,
         public string $videoPath,
+        public string $thumbnailRelativePath,
+        public string $disk = 'public',
     )
     {}
 
@@ -26,25 +32,20 @@ class GenerateThumbFromVideo implements ShouldQueue
      */
     public function handle(): void
     {
-        $disk = config('filesystems.default');
+        $storage = Storage::disk($this->disk);
 
-        // Caminho absoluto do vídeo
-        $videoFullPath = Storage::disk($disk)->path($this->videoPath);
-
-        // Gerar nome e caminho da thumbnail
-        $thumbnailName = "thumb_" . uniqid() . ".jpg";
-        $thumbnailRelativePath = "uploads/users/{$this->userId}/posts/{$this->postId}/thumbnail/{$thumbnailName}";
-        $thumbnailAbsolutePath = Storage::disk($disk)->path($thumbnailRelativePath);
+        // Caminho absoluto do vídeo e da thumbnail
+        $videoFullPath = $storage->path($this->videoPath);
+        $thumbnailAbsolutePath = $storage->path($this->thumbnailRelativePath);
 
         // Criar diretório da thumbnail
-        Storage::disk($disk)->makeDirectory(dirname($thumbnailRelativePath));
+        $storage->makeDirectory(dirname($this->thumbnailRelativePath));
 
-        // Executar FFmpeg para extrair frame do segundo 2 do vídeo
-        exec("ffmpeg -i \"{$videoFullPath}\" -ss 00:00:02 -vframes 1 \"{$thumbnailAbsolutePath}\"");
-
-        // Atualizar thumbnail no banco
-        $thumbnailUrl = Storage::disk($disk)->url($thumbnailRelativePath);
-        $post = Post::findOrFail($this->postId);
-        $post->update(['thumbnail_path' => $thumbnailUrl]);
+        // Executar FFmpeg para extrair frame do segundo 2 do vídeo com flags corrigidas para evitar aviso
+        exec(sprintf(
+            'ffmpeg -y -i %s -ss 00:00:02 -frames:v 1 -update 1 %s',
+            escapeshellarg($videoFullPath),
+            escapeshellarg($thumbnailAbsolutePath)
+        ));
     }
 }

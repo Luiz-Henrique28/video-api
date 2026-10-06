@@ -79,7 +79,14 @@ class MediaController extends Controller
         }
 
         if (!$thumbnailPath && $firstVideoPath) {
-            GenerateThumbFromVideo::dispatch($post->user_id, $post->id, $firstVideoPath);
+            $thumbnailName = "thumb_" . uniqid() . ".jpg";
+            $thumbnailRelativePath = "uploads/users/{$userId}/posts/{$post->id}/thumbnail/{$thumbnailName}";
+            
+            // Set thumbnail URL immediately so the frontend receives it in the response
+            $thumbnailUrl = Storage::disk($disk)->url($thumbnailRelativePath);
+            $post->update(['thumbnail_path' => $thumbnailUrl]);
+
+            GenerateThumbFromVideo::dispatch($firstVideoPath, $thumbnailRelativePath, $disk);
         }
 
         $post->media()->createMany($fileModel);
