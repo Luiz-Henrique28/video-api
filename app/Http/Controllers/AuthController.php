@@ -6,6 +6,7 @@ use App\Http\Requests\FirebaseAuthRequest;
 use App\Http\Resources\UserMinifiedResource;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Exception\Auth\FailedToVerifyToken;
 
 class AuthController extends Controller
@@ -24,10 +25,10 @@ class AuthController extends Controller
                 'message' => 'Token inválido ou expirado.',
             ], 401);
         } catch (\Throwable $e) {
+            Log::error($e);
+
             return response()->json([
                 'message' => 'Erro ao processar autenticação externa.',
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
             ], 500);
         }
 
