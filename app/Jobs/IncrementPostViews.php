@@ -52,7 +52,7 @@ class IncrementPostViews implements ShouldQueue
         $post = Post::find($this->postId);
         if ($post) {
             $post->increment('views_count');
-            User::where('id', $post->user_id)->increment('profile_views_count');
+            User::where('id', $post->user_id)->increment('total_views');
         }
     }
 }
