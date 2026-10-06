@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Like;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Post extends Model
 {
@@ -40,6 +42,16 @@ class Post extends Model
         'created_at',
         'updated_at'
     ];
+
+    /**
+     * The database stores the relative path; the API exposes the public URL.
+     */
+    protected function thumbnailPath(): Attribute
+    {
+        return Attribute::get(
+            fn (?string $value) => $value ? Storage::disk(config('filesystems.default'))->url($value) : null
+        );
+    }
 
     public function media(): HasMany
     {

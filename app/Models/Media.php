@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,8 +16,10 @@ class Media extends Model
     protected static function booted()
     {
         static::deleting(function (Media $media) {
-            if ($media->file_path) {
-                Storage::disk('public')->delete($media->file_path);
+            $path = $media->getRawOriginal('file_path');
+
+            if ($path) {
+                Storage::disk(config('filesystems.default'))->delete($path);
             }
         });
     }
@@ -29,20 +32,22 @@ class Media extends Model
      * @var list<string>
      */
     protected $fillable = [
-       'post_id',
-       'file_path',
-       'media_type',
-       'order',
-       'created_at',
-       'updated_at'
+        'post_id',
+        'file_path',
+        'media_type',
+        'order',
+        'created_at',
+        'updated_at'
     ];
 
-    //protected $appends = ['file_url'];
-
-    public function getFileUrlAttribute() 
+    /**
+     * The database stores the relative path; the API exposes the public URL.
+     */
+    protected function filePath(): Attribute
     {
-        
-        return \Storage::disk('public')->url($this->file_path);
+        return Attribute::get(
+            fn (?string $value) => $value ? Storage::disk(config('filesystems.default'))->url($value) : null
+        );
     }
 
     public function post(): BelongsTo
