@@ -53,7 +53,7 @@ class Post extends Model
     protected function thumbnailPath(): Attribute
     {
         return Attribute::get(
-            fn (?string $value) => $value ? Storage::disk(config('filesystems.default'))->url($value) : null
+            fn (?string $value) => Post::resolveStorageUrl($value)
         );
     }
 
@@ -63,6 +63,23 @@ class Post extends Model
     public function mediaDirectory(): string
     {
         return "uploads/users/{$this->user_id}/posts/{$this->id}";
+    }
+
+    /**
+     * Builds the public URL for a stored path. Absolute URLs (external images)
+     * are returned untouched.
+     */
+    public static function resolveStorageUrl(?string $path): ?string
+    {
+        if (!$path) {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return Storage::disk(config('filesystems.default'))->url($path);
     }
 
     public function media(): HasMany

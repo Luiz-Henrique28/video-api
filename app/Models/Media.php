@@ -46,7 +46,7 @@ class Media extends Model
     protected function filePath(): Attribute
     {
         return Attribute::get(
-            fn (?string $value) => $value ? Storage::disk(config('filesystems.default'))->url($value) : null
+            fn (?string $value) => Post::resolveStorageUrl($value)
         );
     }
 
