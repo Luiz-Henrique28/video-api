@@ -118,6 +118,14 @@ class Post extends Model
      * posts publicos + posts do proprio usuario (inclusive privados).
      * Visitantes anonimos veem apenas posts publicos.
      */
+    public function scopeWithMediaCounts(Builder $query): Builder
+    {
+        return $query->withCount([
+            'media as image_count' => fn ($q) => $q->where('media_type', 'image'),
+            'media as video_count' => fn ($q) => $q->where('media_type', 'video'),
+        ]);
+    }
+
     public function scopeVisibleTo(Builder $query, ?User $user): Builder
     {
         return $query->where(function (Builder $q) use ($user) {

@@ -45,18 +45,11 @@ class UserController extends Controller
     {
         return Post::visibleTo($request->user('sanctum'))
             ->where('user_id', $user->id)
+            ->withMediaCounts()
             ->select(['id', 'user_id', 'caption', 'thumbnail_path', 'created_at', 'views_count'])
             ->with([
                 'firstMedia' => function ($query) {
                     $query->select('post_id', 'file_path');
-                },
-            ])
-            ->withCount([
-                'media as image_count' => function ($query) {
-                    $query->where('media_type', 'image');
-                },
-                'media as video_count' => function ($query) {
-                    $query->where('media_type', 'video');
                 },
             ])
             ->latest()

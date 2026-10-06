@@ -19,27 +19,22 @@ class PostController extends Controller
         $authUser = $request->user('sanctum');
 
         // retorna exatamente os dados usados em cada card do home (swipes)
-        return Post::visibleTo($authUser)->select([
-            'id',
-            'user_id',
-            'caption',
-            'thumbnail_path',
-            'views_count',
-        ])->with([
-            'firstMedia' => function($query) {
-                $query->select('post_id', 'file_path');
-            },
-            'user' => function ($query) {
-                $query->select('id', 'name', 'avatar');
-            }
-        ])->withCount([
-            'media as image_count' => function ($query) {
-                $query->where('media_type', 'image');
-            },
-            'media as video_count' => function ($query) {
-                $query->where('media_type', 'video');
-            }
-        ])->paginate(16);
+        return Post::visibleTo($authUser)
+            ->withMediaCounts()
+            ->select([
+                'id',
+                'user_id',
+                'caption',
+                'thumbnail_path',
+                'views_count',
+            ])->with([
+                'firstMedia' => function ($query) {
+                    $query->select('post_id', 'file_path');
+                },
+                'user' => function ($query) {
+                    $query->select('id', 'name', 'avatar');
+                }
+            ])->paginate(16);
     }
 
     /**
@@ -110,9 +105,7 @@ class PostController extends Controller
      */
     public function destroy(Request $request, Post $post)
     {
-        if ($post->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorize('delete', $post);
 
         $deleted = $post->delete();
 
