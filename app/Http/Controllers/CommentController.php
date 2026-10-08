@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCommentRequest;
+use App\Http\Resources\CommentResource;
 use App\Models\Comment;
 use App\Models\Post;
 use Illuminate\Http\Request;
@@ -24,10 +25,9 @@ class CommentController extends Controller
 
         $comment->load('user:id,name');
 
-        return response()->json([
-            'success' => true,
-            'result' => $comment
-        ]);
+        return (new CommentResource($comment))
+            ->response()
+            ->setStatusCode(201);
     }
 
     /**

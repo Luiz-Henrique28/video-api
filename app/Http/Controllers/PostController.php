@@ -2,24 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePostRequest;
+use App\Http\Resources\PostCardResource;
+use App\Http\Resources\PostDetailResource;
 use App\Jobs\IncrementPostViews;
 use App\Models\Post;
-use App\Http\Requests\StorePostRequest;
 use App\Services\PostService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
+
 class PostController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request): AnonymousResourceCollection
     {
         $authUser = $request->user('sanctum');
 
-        // retorna exatamente os dados usados em cada card do home (swipes)
-        return Post::visibleTo($authUser)
+        $posts = Post::visibleTo($authUser)
             ->withMediaCounts()
             ->select([
                 'id',
@@ -27,6 +30,7 @@ class PostController extends Controller
                 'caption',
                 'thumbnail_path',
                 'views_count',
+                'created_at',
             ])->with([
                 'firstMedia' => function ($query) {
                     $query->select('post_id', 'file_path');
@@ -35,12 +39,14 @@ class PostController extends Controller
                     $query->select('id', 'name', 'avatar');
                 }
             ])->paginate(16);
+
+        return PostCardResource::collection($posts);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StorePostRequest $request, PostService $posts)
+    public function store(StorePostRequest $request, PostService $posts): JsonResponse
     {
         $data = $request->validated();
 
@@ -51,7 +57,9 @@ class PostController extends Controller
             $request->file('files'),
         );
 
-        return response()->json($post, 201);
+        return (new PostDetailResource($post))
+            ->response()
+            ->setStatusCode(201);
     }
 
     /**
@@ -63,7 +71,7 @@ class PostController extends Controller
      *  2. Check definitivo dentro do Job (guarda): resolve race conditions raras
      *     de requests simultaneos do mesmo visitante.
      */
-    public function show(Request $request, Post $post)
+    public function show(Request $request, Post $post): PostDetailResource
     {
         $authUser = $request->user('sanctum') ?? $request->user();
 
@@ -84,7 +92,7 @@ class PostController extends Controller
             ]);
 
         $post->setAttribute('is_liked', $post->isLikedBy($authUser));
-        
+
         $identifier = $authUser?->id
             ? "user:{$authUser->id}"
             : "ip:{$request->ip()}";
@@ -97,13 +105,13 @@ class PostController extends Controller
             );
         }
 
-        return $post;
+        return new PostDetailResource($post);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, Post $post)
+    public function destroy(Request $request, Post $post): JsonResponse
     {
         $this->authorize('delete', $post);
 
