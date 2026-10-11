@@ -137,4 +137,10 @@ class User extends Authenticatable
                      ->where('following_id', $target->id)
                      ->exists();
     }
+
+    public function savedPosts(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class, 'saved_post')
+            ->withPivot('created_at');
+    }
 }

@@ -92,6 +92,7 @@ class PostController extends Controller
             ]);
 
         $post->setAttribute('is_liked', $post->isLikedBy($authUser));
+        $post->setAttribute('is_saved', $post->isSavedBy($authUser));
 
         $identifier = $authUser?->id
             ? "user:{$authUser->id}"
