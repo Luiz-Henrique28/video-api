@@ -18,6 +18,6 @@ class MediaController extends Controller
 
         $deleted = $media->delete();
 
-        return response()->json(['result' => $deleted]);
+        return response()->json(['success' => (bool) $deleted, 'result' => (bool) $deleted, 'message' => 'Mídia deletada com sucesso']);
     }
 }

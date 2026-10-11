@@ -39,6 +39,6 @@ class CommentController extends Controller
 
         $deleted = $comment->delete();
 
-        return response()->json(['result' => $deleted]);
+        return response()->json(['success' => (bool) $deleted, 'result' => (bool) $deleted, 'message' => 'Comentário deletado com sucesso']);
     }
 }

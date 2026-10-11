@@ -117,6 +117,6 @@ class PostController extends Controller
 
         $deleted = $post->delete();
 
-        return response()->json(['result' => $deleted]);
+        return response()->json(['success' => (bool) $deleted, 'result' => (bool) $deleted, 'message' => 'Post deletado com sucesso']);
     }
 }
