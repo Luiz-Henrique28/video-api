@@ -28,6 +28,7 @@ Route::post('/auth/firebase', [AuthController::class, 'authenticateOrRegisterWit
 Route::apiResource('post', PostController::class)->only(['index', 'show']);
 
 Route::get('/user/saved-posts', [SavedPostController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/user/liked-posts', [LikeController::class, 'index'])->middleware('auth:sanctum');
 
 Route::get('/user/{user:name}', [UserController::class, 'show']);
 

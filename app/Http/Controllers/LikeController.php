@@ -5,9 +5,43 @@ namespace App\Http\Controllers;
 use App\Models\Like;
 use App\Models\Post;
 use Illuminate\Http\Request;
+use App\Http\Resources\PostCardResource;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class LikeController extends Controller
 {
+    /**
+     * Listar posts curtidos do usuario autenticado.
+     */
+    public function index(Request $request): AnonymousResourceCollection
+    {
+        $user = $request->user();
+
+        $posts = $user->likedPosts()
+            ->visibleTo($user)
+            ->withMediaCounts()
+            ->select([
+                'post.id',
+                'post.user_id',
+                'post.caption',
+                'post.thumbnail_path',
+                'post.views_count',
+                'post.created_at',
+            ])
+            ->with([
+                'firstMedia' => function ($query) {
+                    $query->select('post_id', 'file_path');
+                },
+                'user' => function ($query) {
+                    $query->select('id', 'name', 'avatar');
+                }
+            ])
+            ->orderByPivot('created_at', 'desc')
+            ->paginate(16);
+
+        return PostCardResource::collection($posts);
+    }
+
     /**
      * Curtir um post.
      */

@@ -98,7 +98,7 @@ class User extends Authenticatable
 
     public function likedPosts(): BelongsToMany
     {
-        return $this->belongsToMany(Post::class, 'like');
+        return $this->belongsToMany(Post::class, 'like')->withPivot('created_at');
     }
 
     // ── Follow Relationships ──────────────────────────────────────────────────
