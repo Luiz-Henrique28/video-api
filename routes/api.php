@@ -9,6 +9,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\BlockController;
+use App\Http\Controllers\RepostController;
 use App\Http\Controllers\SavedPostController;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use Illuminate\Support\Facades\RateLimiter;
@@ -56,6 +57,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('/post/{post}/save', [SavedPostController::class, 'store']);
     Route::delete('/post/{post}/save', [SavedPostController::class, 'destroy']);
+
+    Route::post('/post/{post}/repost', [RepostController::class, 'store']);
+    Route::delete('/post/{post}/repost', [RepostController::class, 'destroy']);
 });
 
 // Auth + Perfil completo

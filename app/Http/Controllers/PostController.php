@@ -89,10 +89,12 @@ class PostController extends Controller
                     $query->where('media_type', 'video');
                 },
                 'likes as likes_count',
+                'reposts as reposts_count',
             ]);
 
         $post->setAttribute('is_liked', $post->isLikedBy($authUser));
         $post->setAttribute('is_saved', $post->isSavedBy($authUser));
+        $post->setAttribute('is_reposted', $post->isRepostedBy($authUser));
 
         $identifier = $authUser?->id
             ? "user:{$authUser->id}"

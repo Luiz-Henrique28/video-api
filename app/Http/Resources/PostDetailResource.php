@@ -25,6 +25,8 @@ class PostDetailResource extends JsonResource
             'video_count'    => (int) ($this->video_count ?? 0),
             'is_liked'       => (bool) ($this->is_liked ?? false),
             'is_saved'       => (bool) ($this->is_saved ?? false),
+            'is_reposted'    => (bool) ($this->is_reposted ?? false),
+            'reposts_count'  => (int) ($this->reposts_count ?? 0),
             'created_at'     => $this->created_at,
             'user'           => new UserMinifiedResource($this->whenLoaded('user')),
             'media'          => MediaResource::collection($this->whenLoaded('media')),

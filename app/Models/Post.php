@@ -161,4 +161,21 @@ class Post extends Model
         return $this->savedPosts()->where('user_id', $user->id)->exists();
     }
 
+    public function reposts(): HasMany
+    {
+        return $this->hasMany(Repost::class);
+    }
+
+    public function repostedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'repost')
+            ->withPivot('created_at');
+    }
+
+    public function isRepostedBy(?User $user): bool
+    {
+        if (!$user) return false;
+        return $this->reposts()->where('user_id', $user->id)->exists();
+    }
+
 }

@@ -103,6 +103,17 @@ class User extends Authenticatable
         return $this->belongsToMany(Post::class, 'like')->withPivot('created_at');
     }
 
+    public function reposts(): HasMany
+    {
+        return $this->hasMany(Repost::class);
+    }
+
+    public function repostedPosts(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class, 'repost')
+            ->withPivot('created_at');
+    }
+
     // ── Follow Relationships ──────────────────────────────────────────────────
 
     /** Usuarios que ESTE usuario segue */

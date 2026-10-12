@@ -40,6 +40,7 @@ class UserController extends Controller
         $profileData['hidden_count'] = ($authUser && $authUser->id === $user->id)
             ? $authUser->blockedUsers()->count()
             : 0;
+        $profileData['reposts_count'] = $user->repostedPosts()->count();
 
         return response()->json(['data' => $profileData]);
     }
@@ -50,19 +51,103 @@ class UserController extends Controller
      */
     public function posts(Request $request, User $user): AnonymousResourceCollection
     {
-        $posts = Post::visibleTo($request->user('sanctum'))
-            ->where('user_id', $user->id)
+        $authUser = $request->user('sanctum') ?? $request->user();
+        $type = $request->query('type', 'all');
+
+        if ($type === 'posts') {
+            $posts = Post::visibleTo($authUser)
+                ->where('post.user_id', $user->id)
+                ->withMediaCounts()
+                ->select(['post.id', 'post.user_id', 'post.caption', 'post.thumbnail_path', 'post.created_at', 'post.views_count'])
+                ->with([
+                    'firstMedia' => fn ($query) => $query->select('post_id', 'file_path'),
+                    'user'       => fn ($query) => $query->select('id', 'name', 'avatar'),
+                ])
+                ->latest('post.created_at')
+                ->paginate(16);
+
+            $posts->getCollection()->transform(function ($post) {
+                $post->setAttribute('is_repost', false);
+                return $post;
+            });
+
+            return PostCardResource::collection($posts);
+        }
+
+        if ($type === 'reposts') {
+            $posts = $user->repostedPosts()
+                ->visibleTo($authUser)
+                ->withMediaCounts()
+                ->select([
+                    'post.id',
+                    'post.user_id',
+                    'post.caption',
+                    'post.thumbnail_path',
+                    'post.created_at',
+                    'post.views_count',
+                ])
+                ->with([
+                    'firstMedia' => fn ($query) => $query->select('post_id', 'file_path'),
+                    'user'       => fn ($query) => $query->select('id', 'name', 'avatar'),
+                ])
+                ->orderByPivot('created_at', 'desc')
+                ->paginate(16);
+
+            $posts->getCollection()->transform(function ($post) {
+                $post->setAttribute('is_repost', true);
+                return $post;
+            });
+
+            return PostCardResource::collection($posts);
+        }
+
+        // type === 'all' (publicacoes proprias + reposts)
+        $ownQuery = Post::visibleTo($authUser)
+            ->where('post.user_id', $user->id)
+            ->select([
+                'post.id as post_id',
+                \Illuminate\Support\Facades\DB::raw('0 as is_repost'),
+                'post.created_at as activity_at',
+            ]);
+
+        $repostQuery = Post::visibleTo($authUser)
+            ->join('repost', 'repost.post_id', '=', 'post.id')
+            ->where('repost.user_id', $user->id)
+            ->select([
+                'post.id as post_id',
+                \Illuminate\Support\Facades\DB::raw('1 as is_repost'),
+                'repost.created_at as activity_at',
+            ]);
+
+        $union = $ownQuery->unionAll($repostQuery);
+
+        $feedItems = \Illuminate\Support\Facades\DB::table($union, 'feed')
+            ->orderBy('activity_at', 'desc')
+            ->paginate(16);
+
+        $postIds = collect($feedItems->items())->pluck('post_id')->unique()->values();
+
+        $postsById = Post::whereIn('id', $postIds)
             ->withMediaCounts()
             ->select(['id', 'user_id', 'caption', 'thumbnail_path', 'created_at', 'views_count'])
             ->with([
-                'firstMedia' => function ($query) {
-                    $query->select('post_id', 'file_path');
-                },
+                'firstMedia' => fn ($query) => $query->select('post_id', 'file_path'),
+                'user'       => fn ($query) => $query->select('id', 'name', 'avatar'),
             ])
-            ->latest()
-            ->paginate(16);
+            ->get()
+            ->keyBy('id');
 
-        return PostCardResource::collection($posts);
+        $posts = $feedItems->getCollection()->map(function ($item) use ($postsById) {
+            $original = $postsById->get($item->post_id);
+            if (!$original) return null;
+            $post = clone $original;
+            $post->setAttribute('is_repost', (bool) $item->is_repost);
+            return $post;
+        })->filter()->values();
+
+        $feedItems->setCollection($posts);
+
+        return PostCardResource::collection($feedItems);
     }
 
     public function update(UpdateUserRequest $request, User $user): JsonResponse

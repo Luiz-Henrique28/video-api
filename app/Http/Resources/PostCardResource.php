@@ -32,6 +32,7 @@ class PostCardResource extends JsonResource
                 'avatar' => $this->user->avatar,
             ]),
             'created_at'     => $this->created_at,
+            'is_repost'      => (bool) ($this->is_repost ?? false),
         ];
     }
 }
