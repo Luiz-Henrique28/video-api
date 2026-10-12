@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\UserBlock;
+
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -142,5 +144,24 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Post::class, 'saved_post')
             ->withPivot('created_at');
+    }
+
+    public function blockedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'user_block',
+            'user_id',
+            'blocked_id'
+        )->withPivot('created_at');
+    }
+
+    public function isBlocking(?User $target): bool
+    {
+        if (!$target || !$this->id) return false;
+
+        return UserBlock::where('user_id', $this->id)
+            ->where('blocked_id', $target->id)
+            ->exists();
     }
 }

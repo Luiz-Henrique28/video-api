@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LikeController;
+use App\Http\Controllers\BlockController;
 use App\Http\Controllers\SavedPostController;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use Illuminate\Support\Facades\RateLimiter;
@@ -29,6 +30,7 @@ Route::apiResource('post', PostController::class)->only(['index', 'show']);
 
 Route::get('/user/saved-posts', [SavedPostController::class, 'index'])->middleware('auth:sanctum');
 Route::get('/user/liked-posts', [LikeController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/user/hiddens', [BlockController::class, 'index'])->middleware('auth:sanctum');
 
 Route::get('/user/{user:name}', [UserController::class, 'show']);
 
@@ -46,6 +48,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::patch('/user/username', [UserController::class, 'updateUsername']);
 
     Route::delete('/user', [UserController::class, 'destroy']);
+    Route::post('/user/{user}/block', [BlockController::class, 'store']);
+    Route::delete('/user/{user}/block', [BlockController::class, 'destroy']);
 
     Route::post('/post/{post}/like', [LikeController::class, 'store']);
     Route::delete('/post/{post}/like', [LikeController::class, 'destroy']);

@@ -25,6 +25,8 @@ class UserProfileResource extends JsonResource
             'following_count' => $this->following_count,
             'posts_count'     => $this->post()->count(),
             'is_following'    => $authUser ? $authUser->isFollowing($this->resource) : null,
+            'is_blocked'      => $authUser ? $authUser->isBlocking($this->resource) : false,
+            'hidden_count'    => $authUser && $authUser->id === $this->id ? $this->blockedUsers()->count() : 0,
         ];
     }
 }

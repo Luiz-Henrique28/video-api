@@ -135,6 +135,12 @@ class Post extends Model
             if ($user) {
                 $q->orWhere('post.user_id', $user->id);
             }
+        })->when($user, function (Builder $q) use ($user) {
+            $q->whereNotIn('post.user_id', function ($sub) use ($user) {
+                $sub->select('blocked_id')
+                    ->from('user_block')
+                    ->where('user_id', $user->id);
+            });
         });
     }
 

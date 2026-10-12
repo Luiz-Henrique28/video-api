@@ -13,6 +13,8 @@ class SearchController extends Controller
 
         $query = $request->get('q');
 
+        $authUser = $request->user('sanctum');
+
         $usersQuery = User::query()
             ->select([
                 'id',
@@ -20,7 +22,14 @@ class SearchController extends Controller
                 'avatar as image',
                 \DB::raw('"user" as type')
             ])
-            ->where('name', 'like', "{$query}%");
+            ->where('name', 'like', "{$query}%")
+            ->when($authUser, function ($q) use ($authUser) {
+                $q->whereNotIn('id', function ($sub) use ($authUser) {
+                    $sub->select('blocked_id')
+                        ->from('user_block')
+                        ->where('user_id', $authUser->id);
+                });
+            });
 
         $tagsQuery = Tag::query()
             ->select([
