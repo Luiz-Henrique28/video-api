@@ -36,6 +36,10 @@ class UserController extends Controller
 
         $authUser = $request->user('sanctum');
         $profileData['is_following'] = $authUser ? $authUser->isFollowing($user) : null;
+        $profileData['is_blocked']   = $authUser ? $authUser->isBlocking($user) : false;
+        $profileData['hidden_count'] = ($authUser && $authUser->id === $user->id)
+            ? $authUser->blockedUsers()->count()
+            : 0;
 
         return response()->json(['data' => $profileData]);
     }

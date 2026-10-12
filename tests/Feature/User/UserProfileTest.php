@@ -188,3 +188,37 @@ it('successfully deletes the authenticated user account and their associated con
         'id' => $comment->id,
     ]);
 });
+
+
+it('returns hidden_count and is_blocked correctly on user profile', function () {
+    $author = User::factory()->create(['name' => 'target_author']);
+    $viewer = User::factory()->create(['name' => 'viewer_user']);
+    $other = User::factory()->create();
+
+    // Viewer blocks target_author
+    \App\Models\UserBlock::create([
+        'user_id' => $viewer->id,
+        'blocked_id' => $author->id,
+        'created_at' => now(),
+    ]);
+
+    // Viewer blocks other
+    \App\Models\UserBlock::create([
+        'user_id' => $viewer->id,
+        'blocked_id' => $other->id,
+        'created_at' => now(),
+    ]);
+
+    // Viewer views target_author profile: is_blocked true, hidden_count 0 (not own profile)
+    Sanctum::actingAs($viewer);
+    $response = $this->getJson('/api/user/target_author');
+    $response->assertOk()
+        ->assertJsonPath('data.is_blocked', true)
+        ->assertJsonPath('data.hidden_count', 0);
+
+    // Viewer views own profile: is_blocked false, hidden_count 2
+    $responseOwn = $this->getJson('/api/user/viewer_user');
+    $responseOwn->assertOk()
+        ->assertJsonPath('data.is_blocked', false)
+        ->assertJsonPath('data.hidden_count', 2);
+});
