@@ -67,6 +67,26 @@ it('returns 409 when blocking an already blocked user', function () {
     $response->assertStatus(409);
 });
 
+it('returns 404 when trying to unblock a user that is not blocked', function () {
+    $user = User::factory()->create();
+    $target = User::factory()->create();
+
+    Sanctum::actingAs($user);
+
+    $response = $this->deleteJson("/api/user/{$target->id}/block");
+    $response->assertNotFound()
+        ->assertJsonPath('message', 'Voce nao bloqueou este usuario.');
+});
+
+it('returns 404 when attempting to block a non-existent user', function () {
+    $user = User::factory()->create();
+
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson('/api/user/999999/block');
+    $response->assertNotFound();
+});
+
 it('lists hidden users for authenticated user', function () {
     $user = User::factory()->create();
     $target1 = User::factory()->create(['name' => 'bloqueado_1']);
@@ -119,4 +139,22 @@ it('excludes blocked users from search results for authenticated user', function
     $labels = collect($response->json())->pluck('label');
     expect($labels->contains('alice_normal'))->toBeTrue();
     expect($labels->contains('alice_bloqueada'))->toBeFalse();
+});
+
+it('excludes posts when authenticated user accesses posts endpoint of a blocked user', function () {
+    $user = User::factory()->create();
+    $target = User::factory()->create();
+
+    Post::factory()->create([
+        'user_id' => $target->id,
+        'visibility' => 'public',
+        'caption' => 'Post do usuario bloqueado',
+    ]);
+
+    Sanctum::actingAs($user);
+    $this->postJson("/api/user/{$target->id}/block");
+
+    $response = $this->getJson("/api/user/{$target->id}/posts");
+    $response->assertOk()
+        ->assertJsonCount(0, 'data');
 });

@@ -70,6 +70,48 @@ it('returns 409 when reposting an already reposted post', function () {
     $response->assertStatus(409);
 });
 
+it('returns 404 when trying to unrepost a post that was not reposted', function () {
+    $author = User::factory()->create();
+    $user = User::factory()->create();
+    $post = Post::factory()->create(['user_id' => $author->id]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->deleteJson("/api/post/{$post->id}/repost");
+    $response->assertNotFound()
+        ->assertJsonPath('message', 'Você não republicou este post.');
+});
+
+it('returns 404 when attempting to repost a non-existent post', function () {
+    $user = User::factory()->create();
+
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson('/api/post/999999/repost');
+    $response->assertNotFound();
+});
+
+it('removes repost records in cascade when original post is deleted', function () {
+    $author = User::factory()->create();
+    $user = User::factory()->create();
+    $post = Post::factory()->create(['user_id' => $author->id]);
+
+    Repost::create([
+        'user_id' => $user->id,
+        'post_id' => $post->id,
+        'created_at' => now(),
+    ]);
+
+    expect($user->repostedPosts()->count())->toBe(1);
+
+    $post->delete();
+
+    $this->assertDatabaseMissing('repost', [
+        'post_id' => $post->id,
+    ]);
+    expect($user->fresh()->repostedPosts()->count())->toBe(0);
+});
+
 it('returns is_reposted true and reposts_count on post detail', function () {
     $author = User::factory()->create();
     $viewer = User::factory()->create();
@@ -148,4 +190,9 @@ it('returns reposts_count on user profile and filters profile posts by tab type'
     $allIds = collect($allTab->json('data'))->pluck('id');
     expect($allIds->contains($ownPost->id))->toBeTrue();
     expect($allIds->contains($otherPost->id))->toBeTrue();
+
+    // Check fallback when type is unknown
+    $fallbackTab = $this->getJson("/api/user/{$user->id}/posts?type=unknown_value");
+    $fallbackTab->assertOk()
+        ->assertJsonCount(2, 'data');
 });
