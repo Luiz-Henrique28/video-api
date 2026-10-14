@@ -50,14 +50,12 @@ class MediaUploadService
             ];
         }
 
-        if (!$thumbnailPath && $firstVideoPath) {
-            $thumbnailPath = "{$directory}/thumbnail/thumb_" . uniqid() . '.jpg';
-
-            GenerateThumbFromVideo::dispatch($firstVideoPath, $thumbnailPath, $disk, $post->id)->afterCommit();
-        }
-
         if ($thumbnailPath) {
             $post->update(['thumbnail_path' => $thumbnailPath]);
+        } elseif ($firstVideoPath) {
+            $videoThumbnailPath = "{$directory}/thumbnail/thumb_" . uniqid() . '.jpg';
+
+            GenerateThumbFromVideo::dispatch($firstVideoPath, $videoThumbnailPath, $disk, $post->id)->afterCommit();
         }
 
         $post->media()->createMany($mediaRows);

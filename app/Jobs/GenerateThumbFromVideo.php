@@ -15,6 +15,7 @@ use Symfony\Component\Process\Process;
  * Responsabilidade:
  * - Extrair um frame do vídeo usando FFmpeg (com busca rápida e fallback).
  * - Garantir resiliência com políticas explícitas de tentativas (tries), timeout e backoff.
+ * - Atualizar o post com thumbnail_path APENAS quando o arquivo já estiver gravado no disco.
  * - Registrar falhas explícitas e limpar referências órfãs caso todas as tentativas falhem.
  */
 class GenerateThumbFromVideo implements ShouldQueue
@@ -99,6 +100,12 @@ class GenerateThumbFromVideo implements ShouldQueue
                 throw new \RuntimeException("Falha ao gerar thumbnail via FFmpeg: {$errorOutput}");
             }
         }
+
+        if ($this->postId) {
+            Post::where('id', $this->postId)->update([
+                'thumbnail_path' => $this->thumbnailRelativePath,
+            ]);
+        }
     }
 
     /**
@@ -113,7 +120,7 @@ class GenerateThumbFromVideo implements ShouldQueue
             'exception' => $exception,
         ]);
 
-        // Limpa o caminho de thumbnail no banco para o frontend não apontar para um arquivo inexistente (404 perpétuo)
+        // Garante que o post não aponte para um arquivo inexistente
         if ($this->postId) {
             $post = Post::find($this->postId);
             if ($post && $post->getRawOriginal('thumbnail_path') === $this->thumbnailRelativePath) {
