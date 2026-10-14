@@ -38,7 +38,10 @@ class PostController extends Controller
                 'user' => function ($query) {
                     $query->select('id', 'name', 'avatar');
                 }
-            ])->paginate(16);
+            ])
+            ->latest('post.created_at')
+            ->orderByDesc('post.id')
+            ->paginate(16);
 
         return PostCardResource::collection($posts);
     }
