@@ -53,7 +53,7 @@ class MediaUploadService
         if (!$thumbnailPath && $firstVideoPath) {
             $thumbnailPath = "{$directory}/thumbnail/thumb_" . uniqid() . '.jpg';
 
-            GenerateThumbFromVideo::dispatch($firstVideoPath, $thumbnailPath, $disk)->afterCommit();
+            GenerateThumbFromVideo::dispatch($firstVideoPath, $thumbnailPath, $disk, $post->id)->afterCommit();
         }
 
         if ($thumbnailPath) {
