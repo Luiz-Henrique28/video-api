@@ -27,7 +27,7 @@ class StorePostRequest extends FormRequest
             'tags' => 'nullable|array',
             'tags.*' => ['required', 'string'],
             'files' => 'required|array|min:1',
-            'files.*' => ['required', 'file', 'mimes:jpg,jpeg,png,mp4', 'max:51200'],
+            'files.*' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,gif,mp4,webm,mov', 'max:51200'],
         ];
     }
 }

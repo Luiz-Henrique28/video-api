@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserMinifiedResource;
 use App\Models\User;
 use App\Models\UserBlock;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class BlockController extends Controller
 {
@@ -13,7 +15,7 @@ class BlockController extends Controller
      * Listar usuarios bloqueados/ocultados pelo usuario autenticado.
      * GET /user/hiddens
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
         $user = $request->user();
 
@@ -22,7 +24,7 @@ class BlockController extends Controller
             ->orderByPivot('created_at', 'desc')
             ->paginate(20);
 
-        return response()->json($blockedUsers);
+        return UserMinifiedResource::collection($blockedUsers);
     }
 
     /**
